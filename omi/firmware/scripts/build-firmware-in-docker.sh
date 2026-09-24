@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # Set up working directory
 cd /omi/firmware/
@@ -18,8 +18,8 @@ cd v2.7.0
 
 # Update west modules (only if not already up to date)
 echo "Updating west modules..."
-west update -o=--depth=1 -n || echo "West update failed, continuing with existing modules."
-west blobs fetch hal_nordic || echo "Blob fetch failed, continuing with existing blobs."
+west update -o=--depth=1 -n
+west blobs fetch hal_nordic
 
 # Configure environment
 echo "Configuring build environment..."
@@ -40,7 +40,7 @@ west build -b xiao_ble/nrf52840/sense --pristine always ../devkit -- \
 echo "Copying build artifacts to output directory..."
 # The build output is in the 'build' directory within the SDK (v2.7.0/build)
 mkdir -p /omi/firmware/build/docker_build
-cp -r build/zephyr/zephyr.{hex,bin,uf2} /omi/firmware/build/docker_build/ || echo "Warning: Some build artifacts not found"
+cp build/zephyr/zephyr.{hex,bin,uf2} /omi/firmware/build/docker_build/
 
 # Create OTA package
 echo "Creating OTA package..."

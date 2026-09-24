@@ -24,7 +24,7 @@ This script will:
 1. Start a Docker container with the Zephyr RTOS build environment
 2. Install necessary tools and dependencies
 3. Build the firmware for the xiao_ble/nrf52840/sense board
-4. Create an OTA package at `firmware/build/docker_build/zephyr.zip`
+4. Create an OTA package at `omi/firmware/build/docker_build/zephyr.zip`
 5. Show the location of all build artifacts
 
 The build configuration exactly matches what would be produced by nRF Connect for VS Code, ensuring compatibility with the official build process.
@@ -45,7 +45,7 @@ By default, the build script will reuse an existing west installation and depend
 
 ### Build Outputs
 
-After a successful build, you will find these files in the `firmware/build/docker_build` directory:
+After a successful build, you will find these files in the `omi/firmware/build/docker_build` directory:
 
 - `zephyr.hex` - Raw firmware hex file
 - `zephyr.bin` - Binary firmware file
@@ -60,7 +60,7 @@ The firmware has several configuration files for different board variants:
 2. `prj_xiao_ble_sense_devkitv1.conf` - For the DevKit V1
 3. `prj_xiao_ble_sense_devkitv1-spisd.conf` - For the DevKit V1 with SPI SD card
 
-The build also uses the corresponding overlay file from `app/overlay/`.
+The build uses the corresponding overlay file from `devkit/overlay/`.
 
 ## Build Parameters
 
@@ -85,15 +85,15 @@ If you prefer to run the Docker commands manually, you can use:
 
 ```bash
 # Run from the root of the repository
-docker run --rm -it -v "$(pwd):/omi" -e CMAKE_PREFIX_PATH=/opt/toolchains -e PATH="/root/.local/bin:$PATH" ghcr.io/zephyrproject-rtos/ci bash
-pip install --user adafruit-nrfutil
+docker run --rm -it -v "$(pwd):/omi" -e CMAKE_PREFIX_PATH=/opt/toolchains ghcr.io/zephyrproject-rtos/ci:v0.26.11@sha256:1041ac8f1aab702f858b279b224bfb8c0a34448fe4e65e0d9501df2ff996c37a bash
+python3 -m pip install adafruit-nrfutil==0.5.3.post16
 cd /omi/firmware/
 west init -m https://github.com/nrfconnect/sdk-nrf --mr v2.7.0 v2.7.0
 cd v2.7.0
 west update -o=--depth=1 -n
 west blobs fetch hal_nordic
 west zephyr-export
-west build -b xiao_ble/nrf52840/sense --pristine always ../app -- \
+west build -b xiao_ble/nrf52840/sense --pristine always ../devkit -- \
     -DNCS_TOOLCHAIN_VERSION="NONE" \
     -DCONF_FILE="prj_xiao_ble_sense_devkitv2-adafruit.conf" \
     -DDTC_OVERLAY_FILE="/omi/firmware/devkit/overlay/xiao_ble_sense_devkitv2-adafruit.overlay" \
@@ -107,14 +107,14 @@ west build -b xiao_ble/nrf52840/sense --pristine always ../app -- \
 
 ### Apple Silicon (M1/M2/M3 Macs)
 
-The script automatically detects Apple Silicon (arm64) architecture and uses the compatible Docker image. No additional configuration is needed.
+The pinned CI image is multi-architecture, so Docker selects the native `linux/amd64` or `linux/arm64` image automatically. No additional configuration is needed.
 
 ### Windows
 
 On Windows, you may need to adjust the path mapping in the Docker command:
 
 ```bash
-docker run --rm -it -v %cd%:/omi -e CMAKE_PREFIX_PATH=/opt/toolchains ghcr.io/zephyrproject-rtos/ci bash
+docker run --rm -it -v %cd%:/omi -e CMAKE_PREFIX_PATH=/opt/toolchains ghcr.io/zephyrproject-rtos/ci:v0.26.11@sha256:1041ac8f1aab702f858b279b224bfb8c0a34448fe4e65e0d9501df2ff996c37a bash
 ```
 
 ## Flashing the Firmware
@@ -128,17 +128,17 @@ After building, copy the `zephyr.uf2` file to the device:
 
 For macOS:
 ```bash
-cp firmware/build/docker_build/zephyr.uf2 /Volumes/XIAO-SENSE/
+cp omi/firmware/build/docker_build/zephyr.uf2 /Volumes/XIAO-SENSE/
 ```
 
 For Linux:
 ```bash
-cp firmware/build/docker_build/zephyr.uf2 /path/to/XIAO-SENSE/
+cp omi/firmware/build/docker_build/zephyr.uf2 /path/to/XIAO-SENSE/
 ```
 
 For Windows:
 ```bash
-copy firmware\firmware\build\docker_build\zephyr.uf2 D:\
+copy omi\firmware\build\docker_build\zephyr.uf2 D:\
 ```
 (where D: is the drive letter of the XIAO-SENSE board)
 
